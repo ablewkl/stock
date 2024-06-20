@@ -33,18 +33,18 @@ export class T0Controller {
 
     @Get('test')
     async test() {
-        console.log(fanwei)
+
     }
     @Get('query')
     async xinxi(@Query() q: any) {
 
-        const res = await request.get(`/v5/stock/chart/kline.json?symbol=SH510760&begin=1718898366000&period=day&type=before&count=-1000&indicator=kline`)
+        const res = await request.get(`/v5/stock/chart/kline.json?symbol=SZ161128&begin=1718898366000&period=day&type=before&count=-1000&indicator=kline`)
         const data = res?.data?.data
         return JSON.stringify(data)
         const item = data?.item || []
         item.forEach(i => {
             const date = formattedDate(i[0])
-            connection.query(`insert into szzz (date,open,high,low,close,chg) values ('${date}','${i[2]}','${i[3]}','${i[4]}','${i[5]}','${i[6]}')`, (err, results, fields) => {
+            connection.query(`insert into xinxi (date,open,high,low,close,chg) values ('${date}','${i[2]}','${i[3]}','${i[4]}','${i[5]}','${i[6]}')`, (err, results, fields) => {
                 if (err) throw err;
                 // `results` 是查询结果
                 // console.log(results);
@@ -64,9 +64,123 @@ export class T0Controller {
     }
     @Get('sx')
     async sx(@Query() q: any) {
+        //范围次数
+        let fanwei = {
+            'fw:<-0.03': 0,
+            'fw:>=0.03': 0,
+        }
+        //范围盈利次数
+        let fwyl = {
+            'fw:<-0.03': 0,
+            'fw:>=0.03': 0,
+        }
+        //范围亏损次数
+        let fwks = {
+            'fw:<-0.03': 0,
+            'fw:>=0.03': 0,
+        }
+        //范围收益次数
+        let fwsy = {
+            'fw:<-0.03': 0,
+            'fw:>=0.03': 0,
+        }
+        //范围总收益
+        let fwayl = {
+            'fw:<-0.03': 0,
+            'fw:>=0.03': 0,
+        }
+        //范围总亏损
+        let fwaks = {
+            'fw:<-0.03': 0,
+            'fw:>=0.03': 0,
+        }
 
+        //总结果对象
+        let allres = {
+
+        }
+        function initdata() {
+            //总结果对象
+            allres = {
+
+            }
+            console.log(fanwei)
+            for (let i = -0.03; i <= 0.03; i += 0.001) {
+                const i2 = i + 0.001
+                const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
+                fanwei[k] = 0
+                fwsy[k] = 0
+                fwyl[k] = 0
+                fwks[k] = 0
+                fwayl[k] = 0
+                fwaks[k] = 0
+            }
+        }
+
+        function printRes(fanwei, fwyl) {
+            let res = ''
+            for (let i = -0.03; i <= 0.03; i += 0.001) {
+                const i2 = i + 0.001
+                const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
+
+                let sl = fwyl[k] && fwks[k] ? (fwyl[k] / fanwei[k] * 100).toFixed(2) : 0
+                if (fwyl[k] > 0 && fwks[k] === 0) {
+                    sl = 100
+                }
+                let red = ''
+                let red2 = ''
+                if (fwsy[k] > 0) {
+                    red = `<d style='color:red;'>`
+                    red2 = '</d>'
+                }
+                //数学期望
+                let sxqw: number | string = (fwyl[k] / fanwei[k]) * (fwayl[k] / fanwei[k]) + (fwks[k] / fanwei[k]) * (fwaks[k] / fanwei[k])
+                sxqw = sxqw ? sxqw.toFixed(2) : '无'
+                let pjyl = fwayl[k] ? (fwayl[k] / fanwei[k]).toFixed(2) : '无'
+                let pjks = fwaks[k] ? (fwaks[k] / fanwei[k]).toFixed(2) : '无'
+                allres[k] = `范围:>=${i.toFixed(3)} ~ <${i2.toFixed(3)}:----次数:${fanwei[k]};胜率:${sl}%;收益:${fwsy[k].toFixed(2)};平均盈利:${pjyl};平均亏损:${pjks};数学期望:${sxqw};`
+                res += `${red}----------------------------------------<br/>
+                范围:>=${i.toFixed(3)} ~ <${i2.toFixed(3)}:<br/>
+                ----次数:${fanwei[k]};胜率:${sl}%;收益:${fwsy[k].toFixed(2)};平均盈利:${pjyl};平均亏损:${pjks};数学期望:${sxqw};<br/>
+                ${red2}`
+            }
+            return res
+        }
+
+
+        function dealdata(openchg, shouyi) {
+            if (openchg < -0.03) {
+                fanwei['fw:<-0.03'] += 1
+                shouyi > 0 ? fwyl['fw:<-0.03'] += 1 : fwks['fw:<-0.03'] += 1
+                shouyi > 0 ? fwayl['fw:<-0.03'] += shouyi : fwaks['fw:<-0.03'] += shouyi
+                fwsy['fw:<-0.03'] += shouyi
+                return
+            }
+            if (openchg >= 0.03) {
+                fanwei['fw:>=0.03'] += 1
+                fwsy['fw:>=0.03'] += shouyi
+                shouyi > 0 ? fwyl['fw:>=0.03'] += 1 : fwks['fw:>=0.03'] += 1
+                shouyi > 0 ? fwayl['fw:>=0.03'] += shouyi : fwaks['fw:>=0.03'] += shouyi
+                return
+            }
+            for (let i = -0.03; i <= 0.03; i += 0.001) {
+                const i2 = i + 0.001
+                const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
+                if (openchg >= i && openchg < i2) {
+                    fanwei[k] = fanwei[k] + 1
+                    fwsy[k] += shouyi
+                    shouyi > 0 ? fwyl[k] += 1 : fwks[k] += 1
+                    shouyi > 0 ? fwayl[k] += shouyi : fwaks[k] += shouyi
+                    return
+                }
+            }
+        }
+
+        initdata()
+
+        const symbol = q.s || ''
         let ares = ''
-        connection.query(`select * from xinxi where 1 limit 1000`, (err, res, fields) => {
+        connection.query(`select * from ${symbol} where 1 limit 1000`, (err, res, fields) => {
 
             const rres = []
             let allshouyi = 0
@@ -84,8 +198,8 @@ export class T0Controller {
             let allwin = 0
 
             const params = {
-                fys: q.fys ? Number(q.fys) : 0.03,//首购止盈
-                zs: q.zs ? Number(q.zs) : 0.005,//首购止损
+                fys: q.fys ? Number(q.fys) : 1,//首购止盈
+                zs: q.zs ? Number(q.zs) : 1,//首购止损
                 upbuypass: q.upbuypass ? Number(q.upbuypass) : 0.01,//超过此不购买
                 upbuylimit: q.upbuylimit ? Number(q.upbuylimit) : -0.001,//低于此不购买
                 unbuyup: q.unbuyup ? Number(q.unbuyup) : 0.001,//不购买范围上
@@ -98,7 +212,7 @@ export class T0Controller {
             }
 
             res.forEach((r, i) => {
-                // if (r.date < '2022-06-12') return
+                if (r.date < '2021-06-12') return
                 if (i == 0 || i == res.length - 1) return
                 alltimes += 1
                 const open = Number(r.open)
@@ -210,7 +324,7 @@ export class T0Controller {
                 }
                 times += 1
                 const shouyi = s - ab
-                console.log(r.date, shouyi)
+                // console.log(r.date, shouyi)
                 if (shouyi > 0) {
                     allwin += shouyi
                     win += 1
@@ -228,23 +342,24 @@ export class T0Controller {
                 allshouyi += shouyi
                 dealdata(openchg, shouyi)
             })
-            console.log(22222, fanwei)
             const printR = printRes(fanwei, fwyl)
-            ares = `
-            总次数:${alltimes}</br>
-            总收益:${allshouyi}</br>
-            总购买次数:${times}</br>
-            盈利胜率:${((win / (win + loss)) * 100).toFixed(2) + '%'}</br>
-            止盈次数:${zytimes}</br>
-            止损次数:${zstimes}</br>
-            数学期望:${((win / (win + loss)) * (allwin / win)) + ((loss / (win + loss)) * (alllose / loss))}</br>
-            平均每次盈利:${(allwin / win).toFixed(1)}</br>
-            平均每次失败后损失:${(alllose / loss).toFixed(1)}</br>
-            盈利大于${params.shouyikedu}次数:${winsome}</br>
-            损失大于${params.shouyikedu}次数:${losssome}</br>
-            参数:止盈:${params.fys * 100}%,止损:${params.zs * 100}%<br/>
-            ${printR}
-            `
+            // ares = `
+            // 总次数:${alltimes}</br>
+            // 总收益:${allshouyi}</br>
+            // 总购买次数:${times}</br>
+            // 盈利胜率:${((win / (win + loss)) * 100).toFixed(2) + '%'}</br>
+            // 止盈次数:${zytimes}</br>
+            // 止损次数:${zstimes}</br>
+            // 数学期望:${((win / (win + loss)) * (allwin / win)) + ((loss / (win + loss)) * (alllose / loss))}</br>
+            // 平均每次盈利:${(allwin / win).toFixed(1)}</br>
+            // 平均每次失败后损失:${(alllose / loss).toFixed(1)}</br>
+            // 盈利大于${params.shouyikedu}次数:${winsome}</br>
+            // 损失大于${params.shouyikedu}次数:${losssome}</br>
+            // 参数:止盈:${params.fys * 100}%,止损:${params.zs * 100}%<br/>
+            // ${printR}
+            // ${JSON.stringify(allres)}
+            // `
+            ares = JSON.stringify(allres)
             //localhost:3000/hszs/sx?fys=0.039&zs=0.0036&upbuypass=0.01&upbuylimit=-0.02&unbuyup=0.01&unbuydown=-0.0038&highup=0.002&highdown=-0.01&hfys=0.032&hzs=0.0012
         })
         return new Promise((resolve, reject) => {
@@ -256,108 +371,3 @@ export class T0Controller {
 
     }
 }
-
-
-
-//范围次数
-const fanwei = {
-    'fw:<-0.03': 0,
-    'fw:>=0.03': 0,
-}
-//范围盈利次数
-const fwyl = {
-    'fw:<-0.03': 0,
-    'fw:>=0.03': 0,
-}
-//范围亏损次数
-const fwks = {
-    'fw:<-0.03': 0,
-    'fw:>=0.03': 0,
-}
-//范围收益次数
-const fwsy = {
-    'fw:<-0.03': 0,
-    'fw:>=0.03': 0,
-}
-//范围总收益
-const fwayl = {
-    'fw:<-0.03': 0,
-    'fw:>=0.03': 0,
-}
-//范围总亏损
-const fwaks = {
-    'fw:<-0.03': 0,
-    'fw:>=0.03': 0,
-}
-function initdata() {
-    for (let i = -0.03; i <= 0.03; i += 0.001) {
-        console.log(i.toFixed(3))
-        const i2 = i + 0.001
-        const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
-        fanwei[k] = 0
-        fwsy[k] = 0
-        fwyl[k] = 0
-        fwks[k] = 0
-        fwayl[k] = 0
-        fwaks[k] = 0
-    }
-}
-
-function printRes(fanwei, fwyl) {
-    let res = ''
-    for (let i = -0.03; i <= 0.03; i += 0.001) {
-        const i2 = i + 0.001
-        const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
-        let sl = fwyl[k] && fwks[k] ? (fwyl[k] / fanwei[k] * 100).toFixed(2) : 0
-        if (fwyl[k] > 0 && fwks[k] === 0) {
-            sl = 100
-        }
-        let red = ''
-        let red2 = ''
-        if (fwsy[k] > 0) {
-            red = `<d style='color:red;'>`
-            red2 = '</d>'
-        }
-        //数学期望
-        let sxqw: number | string = (fwyl[k] / fanwei[k]) * (fwayl[k] / fanwei[k]) + (fwks[k] / fanwei[k]) * (fwaks[k] / fanwei[k])
-        sxqw = sxqw ? sxqw.toFixed(2) : '无'
-        let pjyl = fwayl[k] ? (fwayl[k] / fanwei[k]).toFixed(2) : '无'
-        let pjks = fwaks[k] ? (fwaks[k] / fanwei[k]).toFixed(2) : '无'
-        res += `${red}----------------------------------------<br/>
-                范围:>=${i.toFixed(3)} ~ <${i2.toFixed(3)}:<br/>
-                ----次数:${fanwei[k]};胜率:${sl}%;收益:${fwsy[k].toFixed(2)};平均盈利:${pjyl};平均亏损:${pjks};数学期望:${sxqw};<br/>
-                ${red2}`
-    }
-    return res
-}
-
-
-function dealdata(openchg, shouyi) {
-    if (openchg < -0.03) {
-        fanwei['fw:<-0.03'] += 1
-        shouyi > 0 ? fwyl['fw:<-0.03'] += 1 : fwks['fw:<-0.03'] += 1
-        shouyi > 0 ? fwayl['fw:<-0.03'] += shouyi : fwaks['fw:<-0.03'] += shouyi
-        fwsy['fw:<-0.03'] += shouyi
-        return
-    }
-    if (openchg >= 0.03) {
-        fanwei['fw:>=0.03'] += 1
-        fwsy['fw:>=0.03'] += shouyi
-        shouyi > 0 ? fwyl['fw:>=0.03'] += 1 : fwks['fw:>=0.03'] += 1
-        shouyi > 0 ? fwayl['fw:>=0.03'] += shouyi : fwaks['fw:>=0.03'] += shouyi
-        return
-    }
-    for (let i = -0.03; i <= 0.03; i += 0.001) {
-        const i2 = i + 0.001
-        const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
-        if (openchg >= i && openchg < i2) {
-            fanwei[k] = fanwei[k] + 1
-            fwsy[k] += shouyi
-            shouyi > 0 ? fwyl[k] += 1 : fwks[k] += 1
-            shouyi > 0 ? fwayl[k] += shouyi : fwaks[k] += shouyi
-            return
-        }
-    }
-}
-
-initdata()
