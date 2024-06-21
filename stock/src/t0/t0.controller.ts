@@ -232,16 +232,22 @@ export class T0Controller {
                 alltimes += 1
                 const open = Number(r.open)
                 const nextOpen = Number(res[i + 1].open)
+                const nextHigh = Number(res[i + 1].high)
                 const close = Number(r.close)
                 const nextClose = Number(res[i + 1].close)
                 const base = Number(res[i - 1].close)
                 let fbn = 2000 //首次购买数量
-                // const openchg = Number(((open - base) / base).toFixed(6))
-                const openchg = Number(((close - base) / base).toFixed(6))
+                const openchg = Number(((open - base) / base).toFixed(6))
+                // const openchg = Number(((close - base) / base).toFixed(6))
 
                 let s = close * fbn
-                let ab = close * fbn
+                let ab = open * fbn
                 //---------------------------t+1直接收
+                // if (nextOpen > Number((close + (close * 0.02)).toFixed(4))) {
+                //     s = nextOpen * fbn
+                // } else {
+                //     s = nextClose * fbn
+                // }
                 if (nextOpen > open) {
                     s = nextOpen * fbn
                 } else {
