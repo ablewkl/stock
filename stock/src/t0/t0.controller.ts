@@ -5,7 +5,7 @@ import { createConnection } from 'mysql';
 const request = axios.create({
     baseURL: 'https://stock.xueqiu.com',
     timeout: 1000, // 如果请求话费了超过 `timeout` 的时间，请求将被中断
-    headers: { 'Cookie': 'cookiesu=871710328061368; device_id=3cfa4e79d8759c51741fe541fc369fc5; s=ay12lp8qys; bid=74a8f782be3a6d36dae1ffd2d17920e5_lvex645z; remember=1; xq_is_login=1; u=4822941979; xq_a_token=575535595eadbd421d5a2f5bafc24fac50ad7b6b; xqat=575535595eadbd421d5a2f5bafc24fac50ad7b6b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjQ4MjI5NDE5NzksImlzcyI6InVjIiwiZXhwIjoxNzIxMjM2NTEyLCJjdG0iOjE3MTg2NDQ1MTI0OTcsImNpZCI6ImQ5ZDBuNEFadXAifQ.IUjBYkH6irFSf6g59g_PQMc1ywfYNovjKeyfRRa2vhTrIW1QAd5VC7XZe4-mQ4kzW8YmCtU3Wjl9GQZdtFIXZVjxnL5rLbgdKHS_SdeN3IN6ptAGT1iQ2DOSSNSnolCTV-YoW5gS5HJHo_57ToQIqM9bu8H6vrgpAFm7UCRB_NykSz5UnNococIaTFiSOWEkQ16U29VyK0ztLomYx-FmBSLDRUDc3GfEQaFozBJGR6c2mFHBsOHLbrK_dVJfrT6tZdn8re2yu8UO1kRA9G4gTDyBSAgPxwxZqhE6KdxtSSPBID-uUuI4sf3MKbyyZmUJWWD-IQ6LJYnRTf_qMnCliQ; xq_r_token=8a58f524ebd7d1c43fba527db485c30321202b4d; Hm_lvt_1db88642e346389874251b5a1eded6e3=1717605737,1718185406,1718296603,1718644526; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1718644553' } // 自定义请求头
+    headers: { 'Cookie': 'cookiesu=871710328061368; device_id=3cfa4e79d8759c51741fe541fc369fc5; s=ay12lp8qys; bid=74a8f782be3a6d36dae1ffd2d17920e5_lvex645z; remember=1; xq_is_login=1; u=4822941979; xq_a_token=575535595eadbd421d5a2f5bafc24fac50ad7b6b; xqat=575535595eadbd421d5a2f5bafc24fac50ad7b6b; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjQ4MjI5NDE5NzksImlzcyI6InVjIiwiZXhwIjoxNzIxMjM2NTEyLCJjdG0iOjE3MTg2NDQ1MTI0OTcsImNpZCI6ImQ5ZDBuNEFadXAifQ.IUjBYkH6irFSf6g59g_PQMc1ywfYNovjKeyfRRa2vhTrIW1QAd5VC7XZe4-mQ4kzW8YmCtU3Wjl9GQZdtFIXZVjxnL5rLbgdKHS_SdeN3IN6ptAGT1iQ2DOSSNSnolCTV-YoW5gS5HJHo_57ToQIqM9bu8H6vrgpAFm7UCRB_NykSz5UnNococIaTFiSOWEkQ16U29VyK0ztLomYx-FmBSLDRUDc3GfEQaFozBJGR6c2mFHBsOHLbrK_dVJfrT6tZdn8re2yu8UO1kRA9G4gTDyBSAgPxwxZqhE6KdxtSSPBID-uUuI4sf3MKbyyZmUJWWD-IQ6LJYnRTf_qMnCliQ; xq_r_token=8a58f524ebd7d1c43fba527db485c30321202b4d; Hm_lvt_1db88642e346389874251b5a1eded6e3=1718296603,1718644526,1718918151,1718952129; is_overseas=0; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1718953322' } // 自定义请求头
 })
 
 
@@ -22,8 +22,6 @@ connection.connect(err => {
     if (err) {
         return console.error('error connecting: ' + err.stack);
     }
-
-    console.log('connected as id ' + connection.threadId);
 });
 
 
@@ -38,13 +36,13 @@ export class T0Controller {
     @Get('query')
     async xinxi(@Query() q: any) {
 
-        const res = await request.get(`/v5/stock/chart/kline.json?symbol=SZ161128&begin=1718898366000&period=day&type=before&count=-1000&indicator=kline`)
+        const res = await request.get(`/v5/stock/chart/kline.json?symbol=SH513100&begin=1718898366000&period=day&type=before&count=-1000&indicator=kline`)
         const data = res?.data?.data
-        return JSON.stringify(data)
+        // return JSON.stringify(data)
         const item = data?.item || []
         item.forEach(i => {
             const date = formattedDate(i[0])
-            connection.query(`insert into xinxi (date,open,high,low,close,chg) values ('${date}','${i[2]}','${i[3]}','${i[4]}','${i[5]}','${i[6]}')`, (err, results, fields) => {
+            connection.query(`insert into nzetf (date,open,high,low,close,chg) values ('${date}','${i[2]}','${i[3]}','${i[4]}','${i[5]}','${i[6]}')`, (err, results, fields) => {
                 if (err) throw err;
                 // `results` 是查询结果
                 // console.log(results);
@@ -104,10 +102,10 @@ export class T0Controller {
             allres = {
 
             }
-            console.log(fanwei)
-            for (let i = -0.03; i <= 0.03; i += 0.001) {
-                const i2 = i + 0.001
-                const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
+            for (let i = -30; i < 30; i += 1) {
+                const i3 = (i / 1000).toFixed(3)
+                const i2 = ((i + 1) / 1000).toFixed(3)
+                const k = 'fw:' + i3 + '~' + i2
                 fanwei[k] = 0
                 fwsy[k] = 0
                 fwyl[k] = 0
@@ -119,9 +117,23 @@ export class T0Controller {
 
         function printRes(fanwei, fwyl) {
             let res = ''
-            for (let i = -0.03; i <= 0.03; i += 0.001) {
-                const i2 = i + 0.001
-                const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
+            for (let i = -31; i <= 30; i += 1) {
+                const i3 = (i / 1000).toFixed(3)
+                const i2 = ((i + 1) / 1000).toFixed(3)
+                const f1 = (i / 10).toFixed(2)
+                const f2 = ((i + 1) / 10).toFixed(2)
+                let k = ''
+                let fwt = ''
+                if (i == -31) {
+                    k = 'fw:<-0.03'
+                    fwt = '范围:<-3%'
+                } else if (i == 30) {
+                    k = 'fw:>=0.03'
+                    fwt = '范围:>=3%'
+                } else {
+                    k = 'fw:' + i3 + '~' + i2
+                    fwt = `范围:>=${f1}% ~ <${f2}%`
+                }
 
                 let sl = fwyl[k] && fwks[k] ? (fwyl[k] / fanwei[k] * 100).toFixed(2) : 0
                 if (fwyl[k] > 0 && fwks[k] === 0) {
@@ -138,9 +150,9 @@ export class T0Controller {
                 sxqw = sxqw ? sxqw.toFixed(2) : '无'
                 let pjyl = fwayl[k] ? (fwayl[k] / fanwei[k]).toFixed(2) : '无'
                 let pjks = fwaks[k] ? (fwaks[k] / fanwei[k]).toFixed(2) : '无'
-                allres[k] = `范围:>=${i.toFixed(3)} ~ <${i2.toFixed(3)}:----次数:${fanwei[k]};胜率:${sl}%;收益:${fwsy[k].toFixed(2)};平均盈利:${pjyl};平均亏损:${pjks};数学期望:${sxqw};`
+                allres[k] = `${fwt}:----次数:${fanwei[k]};胜率:${sl}%;收益:${fwsy[k].toFixed(2)};平均盈利:${pjyl};平均亏损:${pjks};数学期望:${sxqw};`
                 res += `${red}----------------------------------------<br/>
-                范围:>=${i.toFixed(3)} ~ <${i2.toFixed(3)}:<br/>
+                范围:>=${fwt}:<br/>
                 ----次数:${fanwei[k]};胜率:${sl}%;收益:${fwsy[k].toFixed(2)};平均盈利:${pjyl};平均亏损:${pjks};数学期望:${sxqw};<br/>
                 ${red2}`
             }
@@ -163,10 +175,13 @@ export class T0Controller {
                 shouyi > 0 ? fwayl['fw:>=0.03'] += shouyi : fwaks['fw:>=0.03'] += shouyi
                 return
             }
-            for (let i = -0.03; i <= 0.03; i += 0.001) {
-                const i2 = i + 0.001
-                const k = 'fw:' + i.toFixed(3) + '~' + i2.toFixed(3)
-                if (openchg >= i && openchg < i2) {
+            for (let i = -30; i < 30; i += 1) {
+                const i3 = (i / 1000).toFixed(3)
+                const i2 = ((i + 1) / 1000).toFixed(3)
+                const i4 = Number((i / 1000).toFixed(4))
+                const i5 = Number(((i + 1) / 1000).toFixed(4))
+                const k = 'fw:' + i3 + '~' + i2
+                if (openchg >= i4 && openchg < i5) {
                     fanwei[k] = fanwei[k] + 1
                     fwsy[k] += shouyi
                     shouyi > 0 ? fwyl[k] += 1 : fwks[k] += 1
@@ -178,7 +193,7 @@ export class T0Controller {
 
         initdata()
 
-        const symbol = q.s || ''
+        const symbol = q.s || 'kccy'
         let ares = ''
         connection.query(`select * from ${symbol} where 1 limit 1000`, (err, res, fields) => {
 
@@ -219,108 +234,18 @@ export class T0Controller {
                 const nextOpen = Number(res[i + 1].open)
                 const close = Number(r.close)
                 const nextClose = Number(res[i + 1].close)
-                const low = Number(r.low)
-                const nextLow = Number(res[i + 1].low)
-                const high = Number(r.high)
-                const nextHigh = Number(res[i + 1].high)
                 const base = Number(res[i - 1].close)
                 let fbn = 2000 //首次购买数量
-                let zs = Number((open - (base * params.zs)).toFixed(4))
-                const openchg = Number(((open - base) / base).toFixed(6))
-                // if (high != close) {
-                //     return
-                //     sbt++
-                // }
-                //hs300
-                // if (!((openchg > 0.01 && openchg < 0.015) || openchg < -0.0034)) {
-                //     //开盘价在当前范围不购买首次
-                //     return
-                // }
-                //xinxi
-                // if (!((openchg > 0 && openchg < 0.005) || openchg < -0.01 || (openchg > 0.012 && openchg < 0.02) || (openchg > 0.021 && openchg < 0.022))) {
-                //     //开盘价在当前范围不购买首次
-                //     return
-                // }
-                //zz1000
-                // if ((openchg >= -0.02 && openchg <= -0.01) || openchg >= 0.15 || (openchg <= 0.005 && openchg >= -0.0028)) {
-                //     //开盘价在当前范围不购买首次
-                //     return
-                // }
-                //zz500
-                // if (!(openchg < -0.0034 || (openchg > 0.005 && openchg <= 0.01))) {
-                //     //开盘价在当前范围不购买首次
-                //     return
-                // }
-                //标普etf
-                // if (!((openchg > -0.02 && openchg <= -0.015) || (openchg > 0.004 && openchg <= 0.007) || (openchg > -0.005 && openchg < -0.0022))) {
-                //     //开盘价在当前范围不购买首次
-                //     return
-                // }
-                //中证红利
-                // if (!(openchg <= 0.005)) {
-                //     //开盘价在当前范围不购买首次
-                //     return
-                // }
+                // const openchg = Number(((open - base) / base).toFixed(6))
+                const openchg = Number(((close - base) / base).toFixed(6))
 
-                let fys = Number((open + (base * params.fys)).toFixed(4))//首次购买盈利点位,首盈点
                 let s = close * fbn
-                let ab = open * fbn
-
-                let hlf = nextOpen > nextClose ? 1 : 0//1先高后低,0先低后高
-                //---------------------------t+0
-                // if (hlf) {
-                //     if (high >= fys) {
-                //         zytimes += 1
-                //         s = fys * fbn
-                //     } else if (low <= zs) {
-                //         s = zs * fbn
-                //         zstimes += 1
-                //     } else {
-                //         s = close * fbn
-                //     }
-                // } else {
-                //     if (low <= zs) {
-                //         s = zs * fbn
-                //         zstimes += 1
-                //     } else if (high >= fys) {
-                //         zytimes += 1
-                //         s = fys * fbn
-                //     } else {
-                //         s = close * fbn
-                //     }
-                // }
-                //---------------------------t+1
-                if (hlf) {
-                    if (nextOpen <= zs) {
-                        s = nextOpen * fbn
-                        zstimes += 1
-                    } else if (nextOpen > fys) {
-                        zytimes += 1
-                        s = nextOpen * fbn
-                    } else if (nextHigh >= fys) {
-                        zytimes += 1
-                        s = fys * fbn
-                    } else if (nextLow <= zs) {
-                        s = zs * fbn
-                        zstimes += 1
-                    } else {
-                        s = nextClose * fbn
-                    }
+                let ab = close * fbn
+                //---------------------------t+1直接收
+                if (nextOpen > open) {
+                    s = nextOpen * fbn
                 } else {
-                    if (nextOpen <= zs) {
-                        s = nextOpen * fbn
-                    } else if (nextOpen >= fys) {
-                        zytimes += 1
-                        s = nextOpen * fbn
-                    } else if (nextLow <= zs) {
-                        s = zs * fbn
-                        zstimes += 1
-                    } else if (nextHigh >= fys) {
-                        zytimes += 1
-                        s = fys * fbn
-                    } else {
-                        s = nextClose * fbn
-                    }
+                    s = nextClose * fbn
                 }
                 times += 1
                 const shouyi = s - ab
@@ -343,24 +268,22 @@ export class T0Controller {
                 dealdata(openchg, shouyi)
             })
             const printR = printRes(fanwei, fwyl)
-            // ares = `
-            // 总次数:${alltimes}</br>
-            // 总收益:${allshouyi}</br>
-            // 总购买次数:${times}</br>
-            // 盈利胜率:${((win / (win + loss)) * 100).toFixed(2) + '%'}</br>
-            // 止盈次数:${zytimes}</br>
-            // 止损次数:${zstimes}</br>
-            // 数学期望:${((win / (win + loss)) * (allwin / win)) + ((loss / (win + loss)) * (alllose / loss))}</br>
-            // 平均每次盈利:${(allwin / win).toFixed(1)}</br>
-            // 平均每次失败后损失:${(alllose / loss).toFixed(1)}</br>
-            // 盈利大于${params.shouyikedu}次数:${winsome}</br>
-            // 损失大于${params.shouyikedu}次数:${losssome}</br>
-            // 参数:止盈:${params.fys * 100}%,止损:${params.zs * 100}%<br/>
-            // ${printR}
-            // ${JSON.stringify(allres)}
-            // `
-            ares = JSON.stringify(allres)
-            //localhost:3000/hszs/sx?fys=0.039&zs=0.0036&upbuypass=0.01&upbuylimit=-0.02&unbuyup=0.01&unbuydown=-0.0038&highup=0.002&highdown=-0.01&hfys=0.032&hzs=0.0012
+            ares = `
+            总次数:${alltimes}</br>
+            总收益:${allshouyi}</br>
+            总购买次数:${times}</br>
+            盈利胜率:${((win / (win + loss)) * 100).toFixed(2) + '%'}</br>
+            止盈次数:${zytimes}</br>
+            止损次数:${zstimes}</br>
+            数学期望:${((win / (win + loss)) * (allwin / win)) + ((loss / (win + loss)) * (alllose / loss))}</br>
+            平均每次盈利:${(allwin / win).toFixed(1)}</br>
+            平均每次失败后损失:${(alllose / loss).toFixed(1)}</br>
+            盈利大于${params.shouyikedu}次数:${winsome}</br>
+            损失大于${params.shouyikedu}次数:${losssome}</br>
+            参数:止盈:${params.fys * 100}%,止损:${params.zs * 100}%<br/>
+            ${printR}
+            ${JSON.stringify(allres)}
+            `
         })
         return new Promise((resolve, reject) => {
             setTimeout(() => {
